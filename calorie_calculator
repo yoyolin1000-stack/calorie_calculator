@@ -1,3 +1,4 @@
+import os
 import hashlib
 import sqlite3
 from datetime import datetime
@@ -5,10 +6,19 @@ import pandas as pd
 import streamlit as st
 
 # ── 資料庫設定 ──────────────────────────────────────────────────
+def get_db_connection():
+    """安全取得資料庫連線，確保在雲端環境有正確的讀寫路徑"""
+    # 如果是在 Streamlit 雲端 Linux 環境，改用 /tmp 暫存資料夾
+    if os.name != "nt" and os.path.exists("/tmp"):
+        db_path = "/tmp/users.db"
+    else:
+        # 在你自己的 Windows 電腦或 Codespaces 則維持當前目錄
+        db_path = os.path.join(os.getcwd(), "users.db")
 
+    return sqlite3.connect(db_path)
 
 def init_db():
-    conn = sqlite3.connect("users.db")
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute(
         """
@@ -42,7 +52,7 @@ def check_hashes(password, hashed_text):
 
 
 def add_user(username, password):
-    conn = sqlite3.connect("users.db")
+    conn = get_db_connection()
     c = conn.cursor()
     try:
         c.execute(
@@ -58,7 +68,7 @@ def add_user(username, password):
 
 
 def login_user(username, password):
-    conn = sqlite3.connect("users.db")
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute(
         "SELECT password FROM users WHERE username = ?", (username,)
@@ -71,7 +81,7 @@ def login_user(username, password):
 
 
 def add_weight_record(username, weight):
-    conn = sqlite3.connect("users.db")
+    conn = get_db_connection()
     c = conn.cursor()
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
     c.execute(
@@ -83,7 +93,7 @@ def add_weight_record(username, weight):
 
 
 def get_weight_history(username):
-    conn = sqlite3.connect("users.db")
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute(
         "SELECT timestamp, weight FROM weight_history WHERE username = ? ORDER BY timestamp ASC",
