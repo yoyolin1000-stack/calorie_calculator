@@ -1,5 +1,3 @@
-
-
 import hashlib
 from datetime import datetime
 import os
@@ -370,4 +368,227 @@ def main():
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        html, body,
+        html, body, [data-testid="stAppViewContainer"] {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        
+        .premium-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .premium-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        .main-title {
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 38px;
+            margin-bottom: 5px;
+        }
+        .sub-title {
+            color: #8892b0;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            margin-bottom: 40px;
+        }
+        
+        div.stButton > button:first-child {
+            background: #ffffff !important;
+            color: #000000 !important;
+            border-radius: 30px !important;
+            border: none !important;
+            padding: 12px 35px !important;
+            font-weight: 600 !important;
+            font-size: 15px !important;
+            letter-spacing: 0.5px !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1) !important;
+            width: auto !important;
+            margin: 20px auto 0 auto !important;
+            display: block !important;
+        }
+        div.stButton > button:first-child:hover {
+            background: #667eea !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4) !important;
+            transform: scale(1.03);
+        }
+
+        .stTextInput input, .stNumberInput input {
+            background-color: rgba(255, 255, 255, 0.01) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            border-radius: 12px !important;
+            color: #fff !important;
+            padding: 12px !important;
+        }
+        .stTextInput input:focus, .stNumberInput input:focus {
+            border-color: #667eea !important;
+            box-shadow: 0 0 0 1px #667eea !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    if "logged_in" not in st.session_state:
+        st.session_state["logged_in"] = False
+    if "username" not in st.session_state:
+        st.session_state["username"] = ""
+
+    if not st.session_state["logged_in"]:
+        _, center_col, _ = st.columns([1, 1.5, 1])
+        with center_col:
+            st.markdown('<div class="premium-card" style="margin-top: 100px; text-align: center;">', unsafe_allow_html=True)
+            st.markdown('<h2 style="font-weight:700; margin-bottom:10px;">SYSTEM SIGN IN</h2>', unsafe_allow_html=True)
+            st.markdown('<p style="color:#666; font-size:13px; margin-bottom:30px;">請驗證您的成員帳號</p>', unsafe_allow_html=True)
+            
+            menu = ["登入帳號", "註冊新用戶"]
+            choice = st.selectbox("模式切換", menu, label_visibility="collapsed")
+
+            if choice == "註冊新用戶":
+                new_user = st.text_input("設定新帳號 ID", key="reg_user", placeholder="請輸入帳號名稱")
+                new_password = st.text_input("設定新密碼", type="password", key="reg_pass", placeholder="請輸入密碼")
+                if st.button("CREATE ACCOUNT"):
+                    if new_user and new_password:
+                        if add_user(new_user, new_password):
+                            st.success("🎉 註冊成功！請切換至登入模式。")
+                        else:
+                            st.error("❌ 帳號已被佔用。")
+                    else:
+                        st.warning("⚠️ 請填妥所有欄位。")
+
+            elif choice == "登入帳號":
+                username = st.text_input("帳號 ID", key="login_user", placeholder="Username")
+                password = st.text_input("安全密碼", type="password", key="login_pass", placeholder="Password")
+                if st.button("LAUNCH SYSTEM"):
+                    if login_user(username, password):
+                        st.session_state["logged_in"] = True
+                        st.session_state["username"] = username
+                        st.rerun()
+                    else:
+                        st.error("❌ 認證失敗，請檢查帳號密碼。")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+    else:
+        with st.sidebar:
+            st.markdown(f"<div style='padding:15px; border-radius:10px; background:rgba(255,255,255,0.02); text-align:center;'>👤 當前登入用戶<br><b style='font-size:18px; color:#667eea;'>{st.session_state['username']}</b></div>", unsafe_allow_html=True)
+            st.write(" ")
+            if st.button("TERMINATE SESSION"):
+                st.session_state["logged_in"] = False
+                st.session_state["username"] = ""
+                st.rerun()
+
+        if st.session_state["username"] == "admin":
+            show_advanced_admin_dashboard()
+        else:
+            st.markdown('<h1 class="main-title">NUTRITION LAB // ⚡</h1>', unsafe_allow_html=True)
+            st.markdown('<p class="sub-title">智能熱量缺口計算與動態飲食調配系統</p>', unsafe_allow_html=True)
+
+            main_left, main_right = st.columns([1, 1.2], gap="large")
+
+            with main_left:
+                st.markdown('<div class="premium-card">', unsafe_allow_html=True)
+                st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:20px;'><i class='fa-solid fa-sliders' style='color:#667eea; margin-right:10px;'></i>01 / 身體特徵配置</h4>", unsafe_allow_html=True)
+                
+                col_w, col_h, col_a = st.columns(3)
+                with col_w:
+                    weight = st.number_input("體重 (kg)", min_value=10.0, max_value=300.0, value=70.0)
+                with col_h:
+                    height = st.number_input("身高 (cm)", min_value=50.0, max_value=250.0, value=170.0)
+                with col_a:
+                    age = st.number_input("年齡", min_value=1, max_value=120, value=25)
+                
+                gender = st.radio("生理性別", ["男性", "女性"], horizontal=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+
+                st.markdown('<div class="premium-card">', unsafe_allow_html=True)
+                st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:20px;'><i class='fa-solid fa-bullseye' style='color:#764ba2; margin-right:10px;'></i>02 / 活動量與管理目標</h4>", unsafe_allow_html=True)
+                
+                activity_level = st.select_slider(
+                    "日常活動量量表",
+                    options=["久坐缺乏運動", "輕度活動", "中度運動量", "高度運動量", "極高運動量"],
+                    value="中度運動量"
+                )
+                activity_mapping = {"久坐缺乏運動": 1.2, "輕度活動": 1.375, "中度運動量": 1.55, "高度運動量": 1.725, "極高運動量": 1.9}
+                activity_factor = activity_mapping[activity_level]
+
+                goal = st.radio(
+                    "核心目標設定",
+                    [
+                        "1. 極速減脂模式 (熱量赤字 -500 kcal)",
+                        "2. 維持體重模式 (熱量平衡)",
+                        "3. 乾淨增肌模式 (熱量盈餘 +300 kcal)"
+                    ]
+                )
+                goal_key = goal[0]
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                calculate_clicked = st.button("EXECUTE ALGORITHM 🚀")
+
+            with main_right:
+                if calculate_clicked:
+                    if gender == "男性":
+                        bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+                    else:
+                        bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
+
+                    tdee = bmr * activity_factor
+                    if goal_key == "1":
+                        target_calories = tdee - 500
+                    elif goal_key == "3":
+                        target_calories = tdee + 300
+                    else:
+                        target_calories = tdee
+
+                    add_weight_record(st.session_state["username"], weight)
+
+                    st.markdown('<div class="premium-card">', unsafe_allow_html=True)
+                    st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:25px;'><i class='fa-solid fa-chart-simple' style='color:#00d2d3; margin-right:10px;'></i>數據分析報告</h4>", unsafe_allow_html=True)
+                    
+                    m_col1, m_col2, m_col3 = st.columns(3)
+                    with m_col1:
+                        st.markdown(f"<p style='margin:0; font-size:12px; color:#888; font-weight:600;'>BMR / 基礎代謝</p><h2 style='margin:5px 0; font-weight:800; color:#fff;'>{round(bmr)}<span style='font-size:12px; color:#666; font-weight:400;'> kcal</span></h2>", unsafe_allow_html=True)
+                    with m_col2:
+                        st.markdown(f"<p style='margin:0; font-size:12px; color:#888; font-weight:600;'>TDEE / 總熱量消耗</p><h2 style='margin:5px 0; font-weight:800; color:#fff;'>{round(tdee)}<span style='font-size:12px; color:#666; font-weight:400;'> kcal</span></h2>", unsafe_allow_html=True)
+                    with m_col3:
+                        st.markdown(f"<p style='margin:0; font-size:12px; color:#FF4B4B; font-weight:600;'>TARGET / 目標攝取</p><h2 style='margin:5px 0; font-weight:800; color:#FF4B4B;'>{round(target_calories)}<span style='font-size:12px; color:#ff4b4b44; font-weight:400;'> kcal</span></h2>", unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+                    st.markdown('<div class="premium-card">', unsafe_allow_html=True)
+                    st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:15px;'><i class='fa-solid fa-utensils' style='color:#ff8f00; margin-right:10px;'></i>客製化動態配餐建議</h4>", unsafe_allow_html=True)
+                    meal_data = generate_dynamic_meal_plan(target_calories, goal_key)
+                    df_meals = pd.DataFrame(meal_data)
+                    st.dataframe(df_meals, use_container_width=True, hide_index=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+                    st.markdown('<div class="premium-card">', unsafe_allow_html=True)
+                    st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:15px;'><i class='fa-solid fa-chart-line' style='color:#a1c4fd; margin-right:10px;'></i>個人歷史體重趨勢</h4>", unsafe_allow_html=True)
+                    history = get_weight_history(st.session_state["username"])
+                    if len(history) > 0:
+                        df_hist = pd.DataFrame(history, columns=["時間", "體重(kg)"])
+                        st.line_chart(df_hist.set_index("時間")["體重(kg)"])
+                    st.markdown('</div>', unsafe_allow_html=True)
+                else:
+                    st.markdown(
+                        """
+                        <div style="border: 2px dashed rgba(255,255,255,0.05); border-radius:20px; padding:60px; text-align:center; color:#666; margin-top:50px;">
+                            <i class="fa-solid fa-chart-pie" style="font-size:40px; margin-bottom:20px; color:#333;"></i>
+                            <p style="font-size:14px;">等待系統數據啟動中<br>請在左側輸入生理指標，並點擊下方按鈕進行運算報告生成。</p>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+
+
+if __name__ == "__main__":
+    main()
