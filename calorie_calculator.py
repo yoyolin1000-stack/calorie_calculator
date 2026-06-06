@@ -1,23 +1,39 @@
-import os
 import hashlib
-import sqlite3
 from datetime import datetime
+import os
+import sqlite3
 import pandas as pd
 import streamlit as st
 
-# ── 資料庫設定 ──────────────────────────────────────────────────
+# ==========================================
+# 區塊一：密碼加密與安全設定
+# ==========================================
+
+
+def make_hashes(password):
+    return hashlib.sha256(str.encode(password)).hexdigest()
+
+
+def check_hashes(password, hashed_text):
+    return make_hashes(password) == hashed_text
+
+
+# ==========================================
+# 區塊二：支援雲端環境的資料庫安全連線與函數
+# ==========================================
+
+
 def get_db_connection():
-    """安全取得資料庫連線，確保在雲端環境有正確的讀寫路徑"""
-    # 如果是在 Streamlit 雲端 Linux 環境，改用 /tmp 暫存資料夾
+    """確保在 Streamlit Cloud 雲端 Linux 環境有正確的讀寫路徑"""
     if os.name != "nt" and os.path.exists("/tmp"):
         db_path = "/tmp/users.db"
     else:
-        # 在你自己的 Windows 電腦或 Codespaces 則維持當前目錄
         db_path = os.path.join(os.getcwd(), "users.db")
-
     return sqlite3.connect(db_path)
 
+
 def init_db():
+    """初始化 SQLite 資料庫與資料表"""
     conn = get_db_connection()
     c = conn.cursor()
     c.execute(
@@ -43,15 +59,8 @@ def init_db():
     conn.close()
 
 
-def make_hashes(password):
-    return hashlib.sha256(str.encode(password)).hexdigest()
-
-
-def check_hashes(password, hashed_text):
-    return make_hashes(password) == hashed_text
-
-
 def add_user(username, password):
+    """註冊新用戶"""
     conn = get_db_connection()
     c = conn.cursor()
     try:
@@ -68,6 +77,7 @@ def add_user(username, password):
 
 
 def login_user(username, password):
+    """登入驗證"""
     conn = get_db_connection()
     c = conn.cursor()
     c.execute(
@@ -81,6 +91,7 @@ def login_user(username, password):
 
 
 def add_weight_record(username, weight):
+    """新增一筆體重紀錄"""
     conn = get_db_connection()
     c = conn.cursor()
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -93,6 +104,7 @@ def add_weight_record(username, weight):
 
 
 def get_weight_history(username):
+    """讀取使用者的所有體重歷史紀錄"""
     conn = get_db_connection()
     c = conn.cursor()
     c.execute(
@@ -104,163 +116,221 @@ def get_weight_history(username):
     return data
 
 
-# ── 常數設定 ────────────────────────────────────────────────────
-
-ACTIVITY_LEVELS = {
-    "久坐（辦公室工作，幾乎不運動）": 1.2,
-    "輕度活動（每週運動 1-3 天）": 1.375,
-    "中度活動（每週運動 3-5 天）": 1.55,
-    "高度活動（每週運動 6-7 天）": 1.725,
-    "極高活動（體力勞動或每日高強度訓練）": 1.9,
-}
-
-GOALS = {
-    "1": ("減重（每日減少 500 大卡）", -500),
-    "2": ("維持體重", 0),
-    "3": ("增肌（每日增加 300 大卡）", 300),
-}
-
-# ── 計算核心 ────────────────────────────────────────────────────
+# ==========================================
+# 區塊三：✨ 高級感客製化管理員控制台 (不像是 AI 做的排版)
+# ==========================================
 
 
-def calc_bmr(weight, height, age, gender):
-    base = 10 * weight + 6.25 * height - 5 * age
-    return base + 5 if gender == "男" else base - 161
+def show_advanced_admin_dashboard():
+    # 注入自訂高級感 CSS：改變字體、卡片陰影與漸層標題
+    st.markdown(
+        """
+        <style>
+        .gradient-text {
+            background: linear-gradient(135deg, #FF4B4B, #FF8F00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+        }
+        .dashboard-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        .giant-number {
+            font-size: 48px;
+            font-weight: 900;
+            color: #FF4B4B;
+            line-height: 1;
+            margin: 10px 0;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
+        '<p class="gradient-text">🔮 CORE CONTROL // 核心控制台</p>',
+        unsafe_allow_html=True,
+    )
+    st.caption("歡迎回來，最高權限管理員。以下為當前雲端伺服器的即時運作數據。")
+    st.write("---")
+
+    # 數據準備（從 SQLite 撈取）
+    conn = get_db_connection()
+    df_users = pd.read_sql_query("SELECT username FROM users", conn)
+    df_weight = pd.read_sql_query("SELECT * FROM weight_history", conn)
+    conn.close()
+
+    total_users = len(df_users)
+    total_records = len(df_weight)
+    avg_weight = (
+        round(df_weight["weight"].mean(), 1) if total_records > 0 else 0
+    )
+
+    # 橫向三欄式「數據看板網格」
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.markdown(
+            f"""
+            <div class="dashboard-card">
+                <span style="color: #888; font-size: 14px; font-weight: 600;">👥 累計註冊成員</span>
+                <div class="giant-number">{total_users} <span style="font-size:18px; color:#555;">人</span></div>
+                <span style="color: #2ED573; font-size: 12px;">▲ 運作中 (🟢 Online)</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col2:
+        st.markdown(
+            f"""
+            <div class="dashboard-card">
+                <span style="color: #888; font-size: 14px; font-weight: 600;">📝 體重總日誌量</span>
+                <div class="giant-number" style="color: #FF8F00;">{total_records} <span style="font-size:18px; color:#555;">筆</span></div>
+                <span style="color: #888; font-size: 12px;">資料庫讀寫正常</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    with col3:
+        st.markdown(
+            f"""
+            <div class="dashboard-card">
+                <span style="color: #888; font-size: 14px; font-weight: 600;">⚖️ 成員平均體重</span>
+                <div class="giant-number" style="color: #00D2D3;">{avg_weight} <span style="font-size:18px; color:#555;">kg</span></div>
+                <span style="color: #888; font-size: 12px;">動態加權平均值</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.write(" ")
+
+    # 使用雙分頁（Tabs）切換不同的數據分類
+    tab1, tab2 = st.tabs(["🔒 成員帳號管理庫", "📈 全站體重數據流"])
+
+    with tab1:
+        st.markdown("### 📋 目前活躍用戶清單")
+        st.dataframe(
+            df_users,
+            column_config={
+                "username": st.column_config.TextColumn(
+                    "使用者帳號 ID",
+                    help="成員登入系統時所使用的唯一代碼",
+                    width="medium",
+                )
+            },
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    with tab2:
+        st.markdown("### 📊 即時變動日誌流")
+        if not df_weight.empty:
+            # 極簡高質感折線圖
+            st.line_chart(df_weight.set_index("timestamp")["weight"])
+            with st.expander("🔍 展開查看原始 SQL 數據明細"):
+                st.dataframe(df_weight, use_container_width=True)
+        else:
+            st.info("目前雲端尚無任何體重紀錄資料。")
 
 
-def calc_macros(calories, goal_key):
-    if goal_key == "1":  # 減重：高蛋白、低碳
-        ratios = {"碳水": 0.40, "蛋白質": 0.35, "脂肪": 0.25}
-    elif goal_key == "3":  # 增肌：高碳、中蛋白
-        ratios = {"碳水": 0.50, "蛋白質": 0.30, "脂肪": 0.20}
-    else:  # 維持：均衡
-        ratios = {"碳水": 0.45, "蛋白質": 0.30, "脂肪": 0.25}
-
-    return {
-        "碳水": round(calories * ratios["碳水"] / 4),
-        "蛋白質": round(calories * ratios["蛋白質"] / 4),
-        "脂肪": round(calories * ratios["脂肪"] / 9),
-    }
-
-
-# ⭐ 全新設計：動態菜單生成演算法 ───────────────────────────────────
+# ==========================================
+# 區塊四：主程式運作邏輯 (卡路里計算機主體)
+# ==========================================
 
 
 def generate_dynamic_meal_plan(target_calories, goal_key):
-    """根據使用者的目標攝取熱量，依比例動態計算出餐點份量"""
-
-    # 定義各餐的熱量分配比例 (早餐 25%, 午餐 35%, 晚餐 30%, 點心 10%)
-    meal_ratios = {"早餐": 0.25, "午餐": 0.35, "晚餐": 0.30, "點心": 0.10}
-
+    """根據目標熱量與減重/增肌目標，動態產生高自由度飲食推薦選單"""
     dynamic_meals = []
+    meal_ratios = {"早餐": 0.30, "午餐": 0.35, "晚餐": 0.35}
 
-    if goal_key == "1":  # 【減重模式】特點：高蛋白質（多雞胸肉、蛋、豆腐）、控碳水
-        # 1. 早餐
+    if goal_key == "1":  # 【極速減脂模式】
         cal = target_calories * meal_ratios["早餐"]
-        egg_count = max(1, round(cal * 0.007))  # 每100大卡約0.7顆蛋
-        yogurt_g = round(cal * 0.53)  # 每100大卡約53g優格
+        egg_count = max(1, round(cal * 0.0028))
+        toast_slice = max(1, round(cal * 0.0022))
+        milk_ml = round(cal * 0.35)
         dynamic_meals.append(
             {
                 "時段": "早餐",
-                "名稱": "低卡高蛋白動態早餐",
-                "食物": f"水煮蛋 {egg_count} 顆 + 無糖希臘優格 {yogurt_g}g + 藍莓少許 + 黑咖啡",
+                "名稱": "高效燃脂活力早餐",
+                "食物": f"🥚 水煮蛋 {egg_count} 顆 + 🍞 全麥吐司 {toast_slice} 片 + 🥛 低脂鮮乳 {milk_ml} ml",
                 "熱量": round(cal),
             }
         )
 
-        # 2. 午餐
         cal = target_calories * meal_ratios["午餐"]
-        chicken_g = round(cal * 0.35)  # 依熱量縮放肉量
-        rice_bowl = round((cal * 0.0012), 1)  # 依熱量縮放飯量
+        chicken_g = round(cal * 0.32)
+        rice_g = round(cal * 0.25)
         dynamic_meals.append(
             {
                 "時段": "午餐",
-                "名稱": "精準控能雞胸便當",
-                "食物": f"烤雞胸肉 {chicken_g}g + 糙米飯 {rice_bowl} 碗 + 燙青菜一大盤 + 橄欖油 1 茶匙",
+                "名稱": "低卡高蛋白飽腹纖體餐",
+                "食物": f"🐔 舒肥雞胸肉 {chicken_g} g + 🍚 糙米飯 {rice_g} g + 🥦 水煮綜合青菜 1 大盤",
                 "熱量": round(cal),
             }
         )
 
-        # 3. 晚餐
         cal = target_calories * meal_ratios["晚餐"]
-        salmon_g = round(cal * 0.34)
-        tofu_g = round(cal * 0.28)
+        fish_g = round(cal * 0.35)
+        sweet_potato_g = round(cal * 0.28)
         dynamic_meals.append(
             {
                 "時段": "晚餐",
-                "名稱": "輕盈蛋白晚食",
-                "食物": f"乾煎鮭魚 {salmon_g}g + 花椰菜 150g + 嫩豆腐 {tofu_g}g + 味噌湯",
+                "名稱": "輕盈低敏抗氧化調理餐",
+                "食物": f"🐟 清蒸鱸魚排 {fish_g} g + 🍠 蒸地瓜 {sweet_potato_g} g + 🥬 大蒜炒時蔬 1 盤",
                 "熱量": round(cal),
             }
         )
 
-        # 4. 點心
-        cal = target_calories * meal_ratios["點心"]
-        oats_g = round(cal * 0.15)
-        nuts_count = max(3, round(cal * 0.05))
-        dynamic_meals.append(
-            {
-                "時段": "點心（可選）",
-                "名稱": "健康低卡小點",
-                "食物": f"大燕麥片 {oats_g}g + 綜合堅果 {nuts_count} 顆 + 蘋果半顆",
-                "熱量": round(cal),
-            }
-        )
-
-    elif goal_key == "3":  # 【增肌模式】特點：高碳水（碳水化合物份量顯著提升）、足量蛋白
-        # 1. 早餐
+    elif goal_key == "3":  # 【乾淨增肌模式】
         cal = target_calories * meal_ratios["早餐"]
-        oats_g = round(cal * 0.13)
-        milk_ml = round(cal * 0.48)
+        whey_scoop = max(1, round(cal * 0.0025))
+        banana_count = max(1, round(cal * 0.0022))
+        toast_slice = max(1, round(cal * 0.0033))
         dynamic_meals.append(
             {
                 "時段": "早餐",
-                "名稱": "增肌高碳動態早餐",
-                "食物": f"燕麥粥 {oats_g}g + 香蕉 1 根 + 全脂牛奶 {milk_ml}ml + 水煮蛋 2 顆",
+                "名稱": "高碳水高蛋白高效增肌早餐",
+                "食物": f"🥤 乳清蛋白 {whey_scoop} 匙 + 🍌 香蕉 {banana_count} 根 + 🍞 全麥吐司 {toast_slice} 片",
                 "熱量": round(cal),
             }
         )
 
-        # 2. 午餐
         cal = target_calories * meal_ratios["午餐"]
-        beef_g = round(cal * 0.25)
-        rice_bowl = round((cal * 0.002), 1)  # 增肌給予較多白米飯
+        beef_g = round(cal * 0.35)
+        rice_g = round(cal * 0.40)
         dynamic_meals.append(
             {
                 "時段": "午餐",
-                "名稱": "高能量主食牛肉便當",
-                "食物": f"白米飯 {rice_bowl} 碗 + 滷牛腱肉 {beef_g}g + 炒時蔬 + 番茄蛋花湯",
+                "名稱": "黃金比例增肌能量便當",
+                "食物": f"🥩 嫩煎牛里肌 {beef_g} g + 🍚 白米飯 {rice_g} g + 🍳 荷包蛋 1 顆 + 🥗 鮮蔬沙拉",
                 "熱量": round(cal),
             }
         )
 
-        # 3. 晚餐
         cal = target_calories * meal_ratios["晚餐"]
-        rice_bowl = round((cal * 0.0015), 1)
-        salmon_g = round(cal * 0.23)
+        pork_g = round(cal * 0.33)
+        pasta_g = round(cal * 0.38)
         dynamic_meals.append(
             {
                 "時段": "晚餐",
-                "名稱": "增量飽足晚餐",
-                "食物": f"五穀飯 {rice_bowl} 碗 + 鮭魚 {salmon_g}g + 毛豆 80g + 地瓜 1 小顆",
+                "名稱": "肌纖維修復高碳水充醣餐",
+                "食物": f"🐷 炙烤豬里肌 {pork_g} g + 🍝 義大利麵 {pasta_g} g + 🥦 蒜炒花椰菜",
                 "熱量": round(cal),
             }
         )
 
-        # 4. 點心
-        cal = target_calories * meal_ratios["點心"]
-        whey_scoop = round(max(1.0, cal * 0.0026), 1)
-        dynamic_meals.append(
-            {
-                "時段": "訓練後補充",
-                "名稱": "高效能修復點心",
-                "食物": f"乳清蛋白 {whey_scoop} 匙 + 香蕉 1 根 + 全麥吐司 1 片",
-                "熱量": round(cal),
-            }
-        )
-
-    else:  # 【維持體重模式】特點：營養素比例均衡
-        # 1. 早餐
+    else:  # 【維持體重健康飲食模式】
         cal = target_calories * meal_ratios["早餐"]
         toast_slice = max(1, round(cal * 0.0044))
         milk_ml = round(cal * 0.55)
@@ -268,45 +338,31 @@ def generate_dynamic_meal_plan(target_calories, goal_key):
             {
                 "時段": "早餐",
                 "名稱": "活力均衡網頁早餐",
-                "食物": f"全麥吐司 {toast_slice} 片 + 荷包蛋 2 顆 + 牛奶 {milk_ml}ml",
+                "食物": f"🍞 全麥吐司 {toast_slice} 片 + 🍳 荷包蛋 2 顆 + 🥛 牛奶 {milk_ml} ml",
                 "熱量": round(cal),
             }
         )
 
-        # 2. 午餐
         cal = target_calories * meal_ratios["午餐"]
         pork_g = round(cal * 0.26)
-        rice_bowl = round((cal * 0.0017), 1)
+        rice_g = round(cal * 0.32)
         dynamic_meals.append(
             {
                 "時段": "午餐",
-                "名稱": "五穀飯豐盛便當",
-                "食物": f"五穀飯 {rice_bowl} 碗 + 豬里肌 {pork_g}g + 炒蔬菜 200g + 豆腐湯",
+                "名稱": "上班族輕卡健康便當",
+                "食物": f"🐷 炒豬瘦肉片 {pork_g} g + 🍚 五穀飯 {rice_g} g + 🥬 炒季節時蔬 2 樣",
                 "熱量": round(cal),
             }
         )
 
-        # 3. 晚餐
         cal = target_calories * meal_ratios["晚餐"]
-        rice_bowl = round((cal * 0.0015), 1)
-        chicken_g = round(cal * 0.26)
+        chicken_g = round(cal * 0.28)
+        rice_g = round(cal * 0.28)
         dynamic_meals.append(
             {
                 "時段": "晚餐",
-                "名稱": "均衡營價值晚餐",
-                "食物": f"糙米飯 {rice_bowl} 碗 + 嫩雞腿肉 {chicken_g}g + 地瓜葉 150g + 蒸蛋 1 顆",
-                "熱量": round(cal),
-            }
-        )
-
-        # 4. 點心
-        cal = target_calories * meal_ratios["點心"]
-        nuts_g = round(cal * 0.09)
-        dynamic_meals.append(
-            {
-                "時段": "下午補充",
-                "名稱": "精力補給小點",
-                "食物": f"綜合堅果 {nuts_g}g + 無糖優酪乳 150ml + 芭樂半顆",
+                "名稱": "家庭溫馨少油低脂餐",
+                "食物": f"🐔 香煎雞腿排(去皮) {chicken_g} g + 🍚 糙米飯 {rice_g} g + 🍅 番茄炒蛋 1 大份",
                 "熱量": round(cal),
             }
         )
@@ -314,151 +370,176 @@ def generate_dynamic_meal_plan(target_calories, goal_key):
     return dynamic_meals
 
 
-# ── 主程式介面 ──────────────────────────────────────────────────
-
-
-def main_app(username):
-    st.title(f"🥗 每日卡路里計算與體重追蹤 App")
-    st.write(f"歡迎回來，**{username}**！")
-
-    # 側邊欄：資料輸入
-    st.sidebar.header("【基本資料】")
-    height = st.sidebar.slider("身高 (cm)", 100.0, 250.0, 170.0, 0.5)
-    weight = st.sidebar.slider("體重 (kg)", 20.0, 300.0, 65.0, 0.5)
-    age = st.sidebar.number_input(
-        "年齡", min_value=10, max_value=100, value=25, step=1
-    )
-    gender = st.sidebar.radio("性別", ["男", "女"])
-
-    st.sidebar.markdown("---")
-    st.sidebar.header("【活動量與目標】")
-    act_choice = st.sidebar.selectbox(
-        "日常活動量", list(ACTIVITY_LEVELS.keys())
-    )
-    act_factor = ACTIVITY_LEVELS[act_choice]
-
-    goal_labels = {v[0]: k for k, v in GOALS.items()}
-    goal_choice = st.sidebar.selectbox("你的目標", list(goal_labels.keys()))
-    goal_key = goal_labels[goal_choice]
-    goal_delta = GOALS[goal_key][1]
-
-    st.sidebar.markdown("---")
-    if st.sidebar.button("📊 開始計算並記錄體重", use_container_width=True):
-        add_weight_record(username, weight)
-        st.success("計算成功！本次體重已成功記錄入庫並更新圖表。")
-
-    # 核心計算
-    bmr = calc_bmr(weight, height, age, gender)
-    tdee = bmr * act_factor
-    target = max(tdee + goal_delta, 1200)
-    macros = calc_macros(target, goal_key)
-
-    # 顯示結果區塊
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric(label="基礎代謝率 (BMR)", value=f"{round(bmr)} 大卡")
-        st.metric(label="每日總消耗 (TDEE)", value=f"{round(tdee)} 大卡")
-    with col2:
-        st.metric(
-            label="🎯 每日建議攝取熱量", value=f"{round(target)} 大卡"
-        )
-
-    st.markdown("---")
-    st.subheader("📊 三大營養素建議配比")
-    c1, c2, c3 = st.columns(3)
-    c1.info(f"🍞 **碳水化合物**\n\n### {macros['碳水']} g")
-    c2.success(f"🥩 **蛋白質**\n\n### {macros['蛋白質']} g")
-    c3.warning(f"🥑 **脂肪**\n\n### {macros['脂肪']} g")
-
-    # 體重趨勢圖表區塊
-    st.markdown("---")
-    st.subheader("📈 歷史體重趨勢圖")
-
-    history_data = get_weight_history(username)
-
-    if history_data:
-        df = pd.DataFrame(history_data, columns=["時間", "體重 (kg)"])
-        df.set_index("時間", inplace=True)
-        st.line_chart(df)
-        with st.expander("查看完整體重數據歷史表格"):
-            st.dataframe(df, use_container_width=True)
-    else:
-        st.info("目前尚無體重紀錄，請在左側點選「開始計算並記錄體重」按鈕來新增第一筆紀錄。")
-
-    # ⭐ 核心修改點：呼叫動態生成函式
-    st.markdown("---")
-    st.subheader("🍱 智能量身定制 ── 建議一日食物配方")
-    st.caption(
-        f"系統已根據您的目標熱量 **{round(target)} 大卡** 依比例為您動態精算每餐克數："
-    )
-
-    # 動態產生該目標熱量下的專屬菜單
-    meals = generate_dynamic_meal_plan(target, goal_key)
-
-    for m in meals:
-        with st.expander(f"【{m['時段']}】{m['名稱']} (分配熱量約: {m['熱量']} 大卡)"):
-            st.write(f"**🛒 精算食物內容：**")
-            st.info(m["食物"])
-
-    total_cal = sum(m["熱量"] for m in meals)
-    st.write(f"**🍽️ 一日總計熱量確認：{total_cal} 大卡**")
-
-    st.warning(
-        "⚠️ 以上為演算法之動態建議，實際需求因個人體質而異。如有特殊健康狀況，建議諮詢專業營養師。"
-    )
-
-    if st.sidebar.button("登出系統"):
-        st.session_state.logged_in = False
-        st.session_state.username = ""
-        st.rerun()
-
-
-# ── 登入/註冊頁面 ────────────────────────────────────────────────
-
-
 def main():
     init_db()
 
+    st.set_page_config(
+        page_title="智能卡路里系統", page_icon="⚖️", layout="centered"
+    )
+
     if "logged_in" not in st.session_state:
-        st.session_state.logged_in = False
-        st.session_state.username = ""
+        st.session_state["logged_in"] = False
+    if "username" not in st.session_state:
+        st.session_state["username"] = ""
 
-    if st.session_state.logged_in:
-        main_app(st.session_state.username)
-        return
+    if not st.session_state["logged_in"]:
+        st.title("🔒 歡迎使用卡路里計算系統")
 
-    st.title("🔒 歡迎使用卡路里計算系統")
+        menu = ["登入帳號", "註冊新用戶"]
+        choice = st.selectbox("請選擇操作", menu)
 
-    menu = ["登入系統", "註冊新帳號"]
-    choice = st.sidebar.selectbox("選單", menu)
+        if choice == "註冊新用戶":
+            st.subheader("📝 建立您的全新帳號")
+            new_user = st.text_input("設定使用者帳號", key="reg_user")
+            new_password = st.text_input(
+                "設定密碼", type="password", key="reg_pass"
+            )
 
-    if choice == "登入系統":
-        st.subheader("會員登入")
-        username = st.text_input("使用者帳號")
-        password = st.text_input("密碼", type="password")
-
-        if st.button("點我登入"):
-            if login_user(username, password):
-                st.session_state.logged_in = True
-                st.session_state.username = username
-                st.success(f"登入成功！歡迎 {username}")
-                st.rerun()
-            else:
-                st.error("帳號或密碼錯誤，請再試一次。")
-
-    elif choice == "註冊新帳號":
-        st.subheader("建立新帳號")
-        new_user = st.text_input("請輸入自訂帳號")
-        new_password = st.text_input("請輸入密碼", type="password")
-
-        if st.button("送出註冊"):
-            if not new_user or not new_password:
-                st.warning("帳號與密碼不能為空！")
-            else:
-                if add_user(new_user, new_password):
-                    st.success("註冊成功！請至左側切換為「登入系統」進行登入。")
+            if st.button("確認註冊"):
+                if new_user and new_password:
+                    if add_user(new_user, new_password):
+                        st.success("🎉 註冊成功！請切換至登入頁面。")
+                    else:
+                        st.error("❌ 帳號已被使用，請更換帳號。")
                 else:
-                    st.error("該帳號已被註冊，請換一個名字。")
+                    st.warning("⚠️ 欄位請勿留白。")
+
+        elif choice == "登入帳號":
+            st.subheader("🔑 登入系統")
+            username = st.text_input("使用者帳號", key="login_user")
+            password = st.text_input("密碼", type="password", key="login_pass")
+
+            if st.button("立即登入"):
+                if login_user(username, password):
+                    st.session_state["logged_in"] = True
+                    st.session_state["username"] = username
+                    st.success(f"👋 歡迎回來，{username}！")
+                    st.rerun()
+                else:
+                    st.error("❌ 帳號或密碼錯誤。")
+
+    else:
+        # ==================== 登入成功後的畫面 ====================
+
+        # 側邊欄個人資訊
+        with st.sidebar:
+            st.write(f"👤 當前登入：**{st.session_state['username']}**")
+            if st.button("登出系統"):
+                st.session_state["logged_in"] = False
+                st.session_state["username"] = ""
+                st.rerun()
+
+        # 🎯 核心權限控管邏輯：如果登入的帳號是 admin，直接展示高級控制台，並跳過一般計算機畫面
+        if st.session_state["username"] == "admin":
+            show_advanced_admin_dashboard()
+
+        else:
+            # 🟢 如果是一般用戶登入，則顯示正常的卡路里計算與飲食推薦介面
+            st.title("⚖️ 智能卡路里與動態菜單推薦系統")
+
+            st.markdown("### 📊 步驟 1：輸入個人身體生理數據")
+            col_w, col_h, col_a = st.columns(3)
+            with col_w:
+                weight = st.number_input(
+                    "目前體重 (kg)", min_value=10.0, max_value=300.0, value=70.0
+                )
+            with col_h:
+                height = st.number_input(
+                    "目前身高 (cm)", min_value=50.0, max_value=250.0, value=170.0
+                )
+            with col_a:
+                age = st.number_input(
+                    "目前年齡 (歲)", min_value=1, max_value=120, value=25
+                )
+
+            gender = st.radio("生理性別", ["男性", "女性"], horizontal=True)
+
+            st.markdown("### 🏃 步驟 2：選擇每日身體活動量等級")
+            activity_level = st.select_slider(
+                "活動量描述",
+                options=[
+                    "久坐缺乏運動",
+                    "輕度活動",
+                    "中度運動量",
+                    "高度運動量",
+                    "極高運動量",
+                ],
+                value="中度運動量",
+            )
+
+            activity_mapping = {
+                "久坐缺乏運動": 1.2,
+                "輕度活動": 1.375,
+                "中度運動量": 1.55,
+                "高度運動量": 1.725,
+                "極高運動量": 1.9,
+            }
+            activity_factor = activity_mapping[activity_level]
+
+            st.markdown("### 🎯 步驟 3：設定您的身材管理終極目標")
+            goal = st.radio(
+                "目標類別",
+                [
+                    "1. 極速減脂模式 (熱量赤字 -500 kcal)",
+                    "2. 維持體重健康飲食模式 (熱量平衡)",
+                    "3. 乾淨增肌模式 (熱量盈餘 +300 kcal)",
+                ],
+            )
+            goal_key = goal[0]
+
+            if st.button("🚀 啟動 AI 核心計算，生成動態推薦菜單"):
+                if gender == "男性":
+                    bmr = (
+                        88.362
+                        + (13.397 * weight)
+                        + (4.799 * height)
+                        - (5.677 * age)
+                    )
+                else:
+                    bmr = (
+                        447.593
+                        + (9.247 * weight)
+                        + (3.098 * height)
+                        - (4.330 * age)
+                    )
+
+                tdee = bmr * activity_factor
+
+                if goal_key == "1":
+                    target_calories = tdee - 500
+                elif goal_key == "3":
+                    target_calories = tdee + 300
+                else:
+                    target_calories = tdee
+
+                add_weight_record(st.session_state["username"], weight)
+
+                st.write("---")
+                st.subheader("🎯 生理數據核心分析報告")
+
+                metric_col1, metric_col2, metric_col3 = st.columns(3)
+                metric_col1.metric("基礎代謝率 (BMR)", f"{round(bmr)} kcal")
+                metric_col2.metric("每日總消耗 (TDEE)", f"{round(tdee)} kcal")
+                metric_col3.metric(
+                    "每日目標攝取量", f"{round(target_calories)} kcal"
+                )
+
+                st.subheader("🍱 客製化動態飲食推薦選單")
+                meal_data = generate_dynamic_meal_plan(
+                    target_calories, goal_key
+                )
+                df_meals = pd.DataFrame(meal_data)
+                st.dataframe(
+                    df_meals, use_container_width=True, hide_index=True
+                )
+
+                st.subheader("📈 您的歷史體重追蹤走勢")
+                history = get_weight_history(st.session_state["username"])
+                if len(history) > 0:
+                    df_hist = pd.DataFrame(history, columns=["時間", "體重(kg)"])
+                    st.line_chart(df_hist.set_index("時間")["體重(kg)"])
+                else:
+                    st.info("這是您的第一次紀錄，繼續保持喔！")
 
 
 if __name__ == "__main__":
