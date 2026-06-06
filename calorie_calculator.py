@@ -376,48 +376,56 @@ def main():
     st.set_page_config(
         page_title="智能卡路里系統", page_icon="⚖️", layout="centered"
     )
-# 在 main() 裡面，st.set_page_config 下方注入這段 CSS
-st.markdown(
-    """
-    <style>
-    /* 1. 改變全站按鈕的外觀：圓角、漸層、懸停縮放效果 */
-    div.stButton > button:first-child {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-radius: 12px;
-        border: none;
-        padding: 10px 24px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    }
-    div.stButton > button:first-child:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
-    }
+def main():
+    init_db()
 
-    /* 2. 改造表單輸入框：更細緻的邊框與對齊 */
-    .stTextInput input, .stNumberInput input {
-        border-radius: 10px !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        background-color: rgba(255, 255, 255, 0.02) !important;
-        transition: all 0.2s;
-    }
-    .stTextInput input:focus, .stNumberInput input:focus {
-        border-color: #667eea !important;
-        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
-    }
+    st.set_page_config(
+        page_title="智能卡路里系統", page_icon="⚖️", layout="centered"
+    )
 
-    /* 3. 客製化單選按鈕 (st.radio) 的卡片化排版 */
-    div[data-testid="stMarkdownContainer"] > p {
-        font-weight: 500;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+    # 🎨 完美縮排的自訂 CSS 區塊
+    st.markdown(
+        """
+        <style>
+        /* 1. 改變全站按鈕的外觀：圓角、漸層、懸停縮放效果 */
+        div.stButton > button:first-child {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+            border-radius: 12px !important;
+            border: none !important;
+            padding: 10px 24px !important;
+            font-weight: 600 !important;
+            letter-spacing: 0.5px !important;
+            transition: all 0.3s ease !important;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+        }
+        div.stButton > button:first-child:hover {
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6) !important;
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
+        }
+
+        /* 2. 改造表單輸入框：更細緻的邊框與對齊 */
+        .stTextInput input, .stNumberInput input {
+            border-radius: 10px !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            background-color: rgba(255, 255, 255, 0.02) !important;
+            transition: all 0.2s;
+        }
+        .stTextInput input:focus, .stNumberInput input:focus {
+            border-color: #667eea !important;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
+        }
+
+        /* 3. 客製化單選按鈕 (st.radio) 的卡片化排版 */
+        div[data-testid="stMarkdownContainer"] > p {
+            font-weight: 500;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
     if "logged_in" not in st.session_state:
         st.session_state["logged_in"] = False
     if "username" not in st.session_state:
@@ -585,3 +593,4 @@ st.markdown(
 
 if __name__ == "__main__":
     main()
+
