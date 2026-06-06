@@ -385,13 +385,11 @@ def main():
         """
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <style>
-        /* 全站字體與背景微調 */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
         html, body, [data-testid="stAppViewContainer"] {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
         
-        /* 高級客製化卡片外框 */
         .premium-card {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -406,7 +404,6 @@ def main():
             transform: translateY(-2px);
         }
         
-        /* 網頁標題與副標題 */
         .main-title {
             font-weight: 800;
             letter-spacing: -1.5px;
@@ -424,7 +421,6 @@ def main():
             margin-bottom: 40px;
         }
         
-        /* 完全擺脫 AI 感的極簡按鈕設計 */
         div.stButton > button:first-child {
             background: #ffffff !important;
             color: #000000 !important;
@@ -447,7 +443,6 @@ def main():
             transform: scale(1.03);
         }
 
-        /* 改造 Streamlit 原生輸入框底色 */
         .stTextInput input, .stNumberInput input {
             background-color: rgba(255, 255, 255, 0.01) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
