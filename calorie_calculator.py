@@ -373,53 +373,91 @@ def generate_dynamic_meal_plan(target_calories, goal_key):
 def main():
     init_db()
 
+    # 1. 網頁基本設定（改為寬敞佈局寬度）
     st.set_page_config(
-        page_title="智能卡路里系統", page_icon="⚖️", layout="centered"
-    )
-def main():
-    init_db()
-
-    st.set_page_config(
-        page_title="智能卡路里系統", page_icon="⚖️", layout="centered"
+        page_title="NUTRITION LAB // 體態分析系統", 
+        page_icon="⚡", 
+        layout="wide"
     )
 
-    # 🎨 完美縮排的自訂 CSS 區塊
+    # 2. ⚡ 網頁頂級視覺美化魔法 (注入 Google 字體與 Font Awesome 圖標)
     st.markdown(
         """
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         <style>
-        /* 1. 改變全站按鈕的外觀：圓角、漸層、懸停縮放效果 */
+        /* 全站字體與背景微調 */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        html, body, [data-testid="stAppViewContainer"] {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+        
+        /* 高級客製化卡片外框 */
+        .premium-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .premium-card:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        /* 網頁標題與副標題 */
+        .main-title {
+            font-weight: 800;
+            letter-spacing: -1.5px;
+            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 42px;
+            margin-bottom: 5px;
+        }
+        .sub-title {
+            color: #8892b0;
+            font-size: 14px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+        }
+        
+        /* 完全擺脫 AI 感的極簡按鈕設計 */
         div.stButton > button:first-child {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-            color: white !important;
-            border-radius: 12px !important;
+            background: #ffffff !important;
+            color: #000000 !important;
+            border-radius: 30px !important;
             border: none !important;
-            padding: 10px 24px !important;
+            padding: 12px 35px !important;
             font-weight: 600 !important;
+            font-size: 15px !important;
             letter-spacing: 0.5px !important;
-            transition: all 0.3s ease !important;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1) !important;
+            width: auto !important;
+            margin: 20px auto 0 auto !important;
+            display: block !important;
         }
         div.stButton > button:first-child:hover {
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6) !important;
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%) !important;
+            background: #667eea !important;
+            color: #ffffff !important;
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4) !important;
+            transform: scale(1.03);
         }
 
-        /* 2. 改造表單輸入框：更細緻的邊框與對齊 */
+        /* 改造 Streamlit 原生輸入框底色 */
         .stTextInput input, .stNumberInput input {
-            border-radius: 10px !important;
+            background-color: rgba(255, 255, 255, 0.01) !important;
             border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            background-color: rgba(255, 255, 255, 0.02) !important;
-            transition: all 0.2s;
+            border-radius: 12px !important;
+            color: #fff !important;
+            padding: 12px !important;
         }
         .stTextInput input:focus, .stNumberInput input:focus {
             border-color: #667eea !important;
-            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
-        }
-
-        /* 3. 客製化單選按鈕 (st.radio) 的卡片化排版 */
-        div[data-testid="stMarkdownContainer"] > p {
-            font-weight: 500;
+            box-shadow: 0 0 0 1px #667eea !important;
         }
         </style>
         """,
@@ -431,164 +469,164 @@ def main():
     if "username" not in st.session_state:
         st.session_state["username"] = ""
 
+    # ==================== 頁面邏輯開始 ====================
     if not st.session_state["logged_in"]:
-        st.title("🔒 歡迎使用卡路里計算系統")
+        # 🔒 未登入：極簡置中登入卡片
+        _, center_col, _ = st.columns([1, 1.5, 1])
+        with center_col:
+            st.markdown('<div class="premium-card" style="margin-top: 100px; text-align: center;">', unsafe_allow_html=True)
+            st.markdown('<h2 style="font-weight:700; margin-bottom:10px;">SYSTEM SIGN IN</h2>', unsafe_allow_html=True)
+            st.markdown('<p style="color:#666; font-size:13px; margin-bottom:30px;">請驗證您的雲端成員帳據</p>', unsafe_allow_html=True)
+            
+            menu = ["登入帳號", "註冊新用戶"]
+            choice = st.selectbox("核心操作模式", menu, label_visibility="collapsed")
 
-        menu = ["登入帳號", "註冊新用戶"]
-        choice = st.selectbox("請選擇操作", menu)
-
-        if choice == "註冊新用戶":
-            st.subheader("📝 建立您的全新帳號")
-            new_user = st.text_input("設定使用者帳號", key="reg_user")
-            new_password = st.text_input(
-                "設定密碼", type="password", key="reg_pass"
-            )
-
-            if st.button("確認註冊"):
-                if new_user and new_password:
-                    if add_user(new_user, new_password):
-                        st.success("🎉 註冊成功！請切換至登入頁面。")
+            if choice == "註冊新用戶":
+                new_user = st.text_input("設定新帳號 ID", key="reg_user", placeholder="請輸入帳號名稱")
+                new_password = st.text_input("設定新安全密碼", type="password", key="reg_pass", placeholder="請輸入密碼")
+                if st.button("CREATE ACCOUNT"):
+                    if new_user and new_password:
+                        if add_user(new_user, new_password):
+                            st.success("🎉 註冊成功！請切換至登入模式。")
+                        else:
+                            st.error("❌ 帳號已被佔用。")
                     else:
-                        st.error("❌ 帳號已被使用，請更換帳號。")
-                else:
-                    st.warning("⚠️ 欄位請勿留白。")
+                        st.warning("⚠️ 請填妥所有欄位。")
 
-        elif choice == "登入帳號":
-            st.subheader("🔑 登入系統")
-            username = st.text_input("使用者帳號", key="login_user")
-            password = st.text_input("密碼", type="password", key="login_pass")
-
-            if st.button("立即登入"):
-                if login_user(username, password):
-                    st.session_state["logged_in"] = True
-                    st.session_state["username"] = username
-                    st.success(f"👋 歡迎回來，{username}！")
-                    st.rerun()
-                else:
-                    st.error("❌ 帳號或密碼錯誤。")
+            elif choice == "登入帳號":
+                username = st.text_input("帳號 ID", key="login_user", placeholder="Username")
+                password = st.text_input("安全密碼", type="password", key="login_pass", placeholder="Password")
+                if st.button("LAUNCH SYSTEM"):
+                    if login_user(username, password):
+                        st.session_state["logged_in"] = True
+                        st.session_state["username"] = username
+                        st.rerun()
+                    else:
+                        st.error("❌ 認證失敗，請檢查帳號密碼。")
+            st.markdown('</div>', unsafe_allow_html=True)
 
     else:
-        # ==================== 登入成功後的畫面 ====================
-
-        # 側邊欄個人資訊
+        # ==================== 登入成功區塊 ====================
         with st.sidebar:
-            st.write(f"👤 當前登入：**{st.session_state['username']}**")
-            if st.button("登出系統"):
+            st.markdown(f"<div style='padding:15px; border-radius:10px; background:rgba(255,255,255,0.02); text-align:center;'>👤 Active Session<br><b style='font-size:18px; color:#667eea;'>{st.session_state['username']}</b></div>", unsafe_allow_html=True)
+            st.write(" ")
+            if st.button("TERMINATE SESSION"):
                 st.session_state["logged_in"] = False
                 st.session_state["username"] = ""
                 st.rerun()
 
-        # 🎯 核心權限控管邏輯：如果登入的帳號是 admin，直接展示高級控制台，並跳過一般計算機畫面
+        # 🎯 系統權限分流
         if st.session_state["username"] == "admin":
             show_advanced_admin_dashboard()
-
         else:
-            # 🟢 如果是一般用戶登入，則顯示正常的卡路里計算與飲食推薦介面
-            st.title("⚖️ 智能卡路里與動態菜單推薦系統")
+            # 🟢 一般用戶主頁面：精緻大標題
+            st.markdown('<h1 class="main-title">NUTRITION LAB // 💻</h1>', unsafe_allow_html=True)
+            st.markdown('<p class="sub-title">Automated Caloric Reductions & Dynamic Meal Engineering</p>', unsafe_allow_html=True)
 
-            st.markdown("### 📊 步驟 1：輸入個人身體生理數據")
-            col_w, col_h, col_a = st.columns(3)
-            with col_w:
-                weight = st.number_input(
-                    "目前體重 (kg)", min_value=10.0, max_value=300.0, value=70.0
+            # 🛠️ 橫向切分兩大專業區塊 (左邊輸入數據，右邊動態即時顯示結果)
+            main_left, main_right = st.columns([1, 1.2], gap="large")
+
+            with main_left:
+                # 卡片一：身體特徵
+                st.markdown('<div class="premium-card">', unsafe_allow_html=True)
+                st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:20px;'><i class='fa-solid fa-sliders' style='color:#667eea; margin-right:10px;'></i>01 / METRIC CONFIG</h4>", unsafe_allow_html=True)
+                
+                col_w, col_h, col_a = st.columns(3)
+                with col_w:
+                    weight = st.number_input("體重 (kg)", min_value=10.0, max_value=300.0, value=70.0)
+                with col_h:
+                    height = st.number_input("身高 (cm)", min_value=50.0, max_value=250.0, value=170.0)
+                with col_a:
+                    age = st.number_input("年齡 (Age)", min_value=1, max_value=120, value=25)
+                
+                gender = st.radio("生理性別 (Gender)", ["男性", "女性"], horizontal=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+
+                # 卡片二：目標與活動量
+                st.markdown('<div class="premium-card">', unsafe_allow_html=True)
+                st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:20px;'><i class='fa-solid fa-bullseye' style='color:#764ba2; margin-right:10px;'></i>02 / ACTIVITY & GOALS</h4>", unsafe_allow_html=True)
+                
+                activity_level = st.select_slider(
+                    "日常物理活動量層級",
+                    options=["久坐缺乏運動", "輕度活動", "中度運動量", "高度運動量", "極高運動量"],
+                    value="中度運動量"
                 )
-            with col_h:
-                height = st.number_input(
-                    "目前身高 (cm)", min_value=50.0, max_value=250.0, value=170.0
+                activity_mapping = {"久坐缺乏運動": 1.2, "輕度活動": 1.375, "中度運動量": 1.55, "高度運動量": 1.725, "極高運動量": 1.9}
+                activity_factor = activity_mapping[activity_level]
+
+                goal = st.radio(
+                    "終極管理目標設定",
+                    [
+                        "1. 極速減脂模式 (熱量赤字 -500 kcal)",
+                        "2. 維持體重健康飲食模式 (熱量平衡)",
+                        "3. 乾淨增肌模式 (熱量盈餘 +300 kcal)"
+                    ]
                 )
-            with col_a:
-                age = st.number_input(
-                    "目前年齡 (歲)", min_value=1, max_value=120, value=25
-                )
+                goal_key = goal[0]
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                # 計算觸發鈕
+                calculate_clicked = st.button("EXECUTE ALGORITHM 🚀")
 
-            gender = st.radio("生理性別", ["男性", "女性"], horizontal=True)
+            with main_right:
+                # 右側：預設靜態與動態計算報告
+                if calculate_clicked:
+                    # 執行演算法核心公式
+                    if gender == "男性":
+                        bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+                    else:
+                        bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age)
 
-            st.markdown("### 🏃 步驟 2：選擇每日身體活動量等級")
-            activity_level = st.select_slider(
-                "活動量描述",
-                options=[
-                    "久坐缺乏運動",
-                    "輕度活動",
-                    "中度運動量",
-                    "高度運動量",
-                    "極高運動量",
-                ],
-                value="中度運動量",
-            )
+                    tdee = bmr * activity_factor
+                    if goal_key == "1":
+                        target_calories = tdee - 500
+                    elif goal_key == "3":
+                        target_calories = tdee + 300
+                    else:
+                        target_calories = tdee
 
-            activity_mapping = {
-                "久坐缺乏運動": 1.2,
-                "輕度活動": 1.375,
-                "中度運動量": 1.55,
-                "高度運動量": 1.725,
-                "極高運動量": 1.9,
-            }
-            activity_factor = activity_mapping[activity_level]
+                    add_weight_record(st.session_state["username"], weight)
 
-            st.markdown("### 🎯 步驟 3：設定您的身材管理終極目標")
-            goal = st.radio(
-                "目標類別",
-                [
-                    "1. 極速減脂模式 (熱量赤字 -500 kcal)",
-                    "2. 維持體重健康飲食模式 (熱量平衡)",
-                    "3. 乾淨增肌模式 (熱量盈餘 +300 kcal)",
-                ],
-            )
-            goal_key = goal[0]
+                    # 💎 頂級 SaaS 風格的數據面板
+                    st.markdown('<div class="premium-card">', unsafe_allow_html=True)
+                    st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:25px;'><i class='fa-solid fa-chart-simple' style='color:#00d2d3; margin-right:10px;'></i>DIAGNOSTIC REPORT</h4>", unsafe_allow_html=True)
+                    
+                    m_col1, m_col2, m_col3 = st.columns(3)
+                    with m_col1:
+                        st.markdown(f"<p style='margin:0; font-size:11px; color:#888; font-weight:600;'>BMR / 基礎代謝</p><h2 style='margin:5px 0; font-weight:800; color:#fff;'>{round(bmr)}<span style='font-size:12px; color:#444; font-weight:400;'> kcal</span></h2>", unsafe_allow_html=True)
+                    with m_col2:
+                        st.markdown(f"<p style='margin:0; font-size:11px; color:#888; font-weight:600;'>TDEE / 總消耗</p><h2 style='margin:5px 0; font-weight:800; color:#fff;'>{round(tdee)}<span style='font-size:12px; color:#444; font-weight:400;'> kcal</span></h2>", unsafe_allow_html=True)
+                    with m_col3:
+                        st.markdown(f"<p style='margin:0; font-size:11px; color:#FF4B4B; font-weight:600;'>TARGET / 目標攝取</p><h2 style='margin:5px 0; font-weight:800; color:#FF4B4B;'>{round(target_calories)}<span style='font-size:12px; color:#ff4b4b44; font-weight:400;'> kcal</span></h2>", unsafe_allow_html=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-            if st.button("🚀 啟動 AI 核心計算，生成動態推薦菜單"):
-                if gender == "男性":
-                    bmr = (
-                        88.362
-                        + (13.397 * weight)
-                        + (4.799 * height)
-                        - (5.677 * age)
+                    # 💎 飲食推薦表格卡片
+                    st.markdown('<div class="premium-card">', unsafe_allow_html=True)
+                    st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:15px;'><i class='fa-solid fa-utensils' style='color:#ff8f00; margin-right:10px;'></i>MEAL INGREDIENT RECOMENDATION</h4>", unsafe_allow_html=True)
+                    meal_data = generate_dynamic_meal_plan(target_calories, goal_key)
+                    df_meals = pd.DataFrame(meal_data)
+                    st.dataframe(df_meals, use_container_width=True, hide_index=True)
+                    st.markdown('</div>', unsafe_allow_html=True)
+
+                    # 💎 歷史走勢圖卡片
+                    st.markdown('<div class="premium-card">', unsafe_allow_html=True)
+                    st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:15px;'><i class='fa-solid fa-chart-line' style='color:#a1c4fd; margin-right:10px;'></i>WEIGHT LOGS OVER TIME</h4>", unsafe_allow_html=True)
+                    history = get_weight_history(st.session_state["username"])
+                    if len(history) > 0:
+                        df_hist = pd.DataFrame(history, columns=["時間", "體重(kg)"])
+                        st.line_chart(df_hist.set_index("時間")["體重(kg)"])
+                    st.markdown('</div>', unsafe_allow_html=True)
+                else:
+                    # 提示點擊引導
+                    st.markdown(
+                        """
+                        <div style="border: 2px dashed rgba(255,255,255,0.05); border-radius:20px; padding:60px; text-align:center; color:#444; margin-top:50px;">
+                            <i class="fa-solid fa-terminal" style="font-size:40px; margin-bottom:20px; color:#222;"></i>
+                            <p style="font-size:14px; letter-spacing:0.5px;">Awaiting parameter sequence execution...<br>請在左側配置生理數據，並點擊 "Execute Algorithm" 啟動雲端運算。</p>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
                     )
-                else:
-                    bmr = (
-                        447.593
-                        + (9.247 * weight)
-                        + (3.098 * height)
-                        - (4.330 * age)
-                    )
-
-                tdee = bmr * activity_factor
-
-                if goal_key == "1":
-                    target_calories = tdee - 500
-                elif goal_key == "3":
-                    target_calories = tdee + 300
-                else:
-                    target_calories = tdee
-
-                add_weight_record(st.session_state["username"], weight)
-
-                st.write("---")
-                st.subheader("🎯 生理數據核心分析報告")
-
-                metric_col1, metric_col2, metric_col3 = st.columns(3)
-                metric_col1.metric("基礎代謝率 (BMR)", f"{round(bmr)} kcal")
-                metric_col2.metric("每日總消耗 (TDEE)", f"{round(tdee)} kcal")
-                metric_col3.metric(
-                    "每日目標攝取量", f"{round(target_calories)} kcal"
-                )
-
-                st.subheader("🍱 客製化動態飲食推薦選單")
-                meal_data = generate_dynamic_meal_plan(
-                    target_calories, goal_key
-                )
-                df_meals = pd.DataFrame(meal_data)
-                st.dataframe(
-                    df_meals, use_container_width=True, hide_index=True
-                )
-
-                st.subheader("📈 您的歷史體重追蹤走勢")
-                history = get_weight_history(st.session_state["username"])
-                if len(history) > 0:
-                    df_hist = pd.DataFrame(history, columns=["時間", "體重(kg)"])
-                    st.line_chart(df_hist.set_index("時間")["體重(kg)"])
-                else:
-                    st.info("這是您的第一次紀錄，繼續保持喔！")
 
 
 if __name__ == "__main__":
