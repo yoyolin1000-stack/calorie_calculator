@@ -117,38 +117,6 @@ def get_weight_history(username):
 
 def show_advanced_admin_dashboard():
     st.markdown(
-        """
-        <style>
-        .gradient-text {
-            background: linear-gradient(135deg, #FF4B4B, #FF8F00);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 32px;
-            font-weight: 800;
-            letter-spacing: -1px;
-            margin-bottom: 5px;
-        }
-        .dashboard-card {
-            background-color: rgba(255, 255, 255, 0.05);
-            border-radius: 16px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-        }
-        .giant-number {
-            font-size: 42px;
-            font-weight: 900;
-            color: #FF4B4B;
-            line-height: 1;
-            margin: 10px 0;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown(
         '<p class="gradient-text">CORE CONTROL // 核心控制台</p>',
         unsafe_allow_html=True,
     )
@@ -363,82 +331,19 @@ def main():
         layout="wide"
     )
 
+    # 🌍 安全引入 Font Awesome 圖標與獨立的 style.css 檔案
     st.markdown(
         """
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        html, body, [data-testid="stAppViewContainer"] {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        }
-        
-        .premium-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 25px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            transition: transform 0.3s ease, border-color 0.3s ease;
-        }
-        .premium-card:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-        }
-        
-        .main-title {
-            font-weight: 800;
-            letter-spacing: -1.5px;
-            background: linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-size: 38px;
-            margin-bottom: 5px;
-        }
-        .sub-title {
-            color: #8892b0;
-            font-size: 14px;
-            letter-spacing: 0.5px;
-            margin-bottom: 40px;
-        }
-        
-        div.stButton > button:first-child {
-            background: #ffffff !important;
-            color: #000000 !important;
-            border-radius: 30px !important;
-            border: none !important;
-            padding: 12px 35px !important;
-            font-weight: 600 !important;
-            font-size: 15px !important;
-            letter-spacing: 0.5px !important;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1) !important;
-            width: auto !important;
-            margin: 20px auto 0 auto !important;
-            display: block !important;
-        }
-        div.stButton > button:first-child:hover {
-            background: #667eea !important;
-            color: #ffffff !important;
-            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4) !important;
-            transform: scale(1.03);
-        }
-
-        .stTextInput input, .stNumberInput input {
-            background-color: rgba(255, 255, 255, 0.01) !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            border-radius: 12px !important;
-            color: #fff !important;
-            padding: 12px !important;
-        }
-        .stTextInput input:focus, .stNumberInput input:focus {
-            border-color: #667eea !important;
-            box-shadow: 0 0 0 1px #667eea !important;
-        }
-        </style>
         """,
         unsafe_allow_html=True,
     )
+    
+    # 讀取剛剛建立的外部 CSS 檔案，確保完全不露出任何明碼字串
+    css_path = os.path.join(os.getcwd(), "style.css")
+    if os.path.exists(css_path):
+        with open(css_path, "r", encoding="utf-8") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
     if "logged_in" not in st.session_state:
         st.session_state["logged_in"] = False
