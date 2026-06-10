@@ -354,7 +354,7 @@ def main():
         _, center_col, _ = st.columns([1, 1.5, 1])
         with center_col:
             st.markdown('<div class="premium-card" style="margin-top: 100px; text-align: center;">', unsafe_allow_html=True)
-            st.markdown('<h2 style="font-weight:700; margin-bottom:10px;">SYSTEM SIGN IN</h2>', unsafe_allow_html=True)
+            st.markdown('<h2 style="font-weight:700; margin-bottom:10px;">卡路里計算機</h2>', unsafe_allow_html=True)
             st.markdown('<p style="color:#666; font-size:13px; margin-bottom:30px;">請驗證您的成員帳號</p>', unsafe_allow_html=True)
             
             menu = ["登入帳號", "註冊新用戶"]
