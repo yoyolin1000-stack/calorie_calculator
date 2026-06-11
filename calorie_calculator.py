@@ -326,9 +326,7 @@ def main():
     init_db()
 
     st.set_page_config(
-        page_title="NUTRITION LAB // 體態分析系統", 
-        page_icon="⚡", 
-        layout="wide"
+        page_title="卡路里計算機", 
     )
 
     # 🌍 安全引入 Font Awesome 圖標與獨立的 style.css 檔案
