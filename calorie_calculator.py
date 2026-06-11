@@ -326,8 +326,10 @@ def main():
     init_db()
 
     st.set_page_config(
-        page_title="卡路里計算機", 
-    )
+    page_title="卡路里計算機",
+    page_icon="⚡",
+    layout="wide"
+)
 
     # 🌍 安全引入 Font Awesome 圖標與獨立的 style.css 檔案
     st.markdown(
@@ -394,7 +396,7 @@ def main():
         if st.session_state["username"] == "admin":
             show_advanced_admin_dashboard()
         else:
-            st.markdown('<h1 class="main-title">NUTRITION LAB // ⚡</h1>', unsafe_allow_html=True)
+            st.markdown('<h1 class="main-title">卡路里計算機</h1>', unsafe_allow_html=True)
             st.markdown('<p class="sub-title">熱量計算與飲食調配系統</p>', unsafe_allow_html=True)
 
             main_left, main_right = st.columns([1, 1.2], gap="large")
