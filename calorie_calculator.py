@@ -397,13 +397,13 @@ def main():
             show_advanced_admin_dashboard()
         else:
             st.markdown('<h1 class="main-title">NUTRITION LAB // ⚡</h1>', unsafe_allow_html=True)
-            st.markdown('<p class="sub-title">智能熱量缺口計算與動態飲食調配系統</p>', unsafe_allow_html=True)
+            st.markdown('<p class="sub-title">熱量計算與飲食調配系統</p>', unsafe_allow_html=True)
 
             main_left, main_right = st.columns([1, 1.2], gap="large")
 
             with main_left:
                 st.markdown('<div class="premium-card">', unsafe_allow_html=True)
-                st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:20px;'><i class='fa-solid fa-sliders' style='color:#667eea; margin-right:10px;'></i>01 / 身體特徵配置</h4>", unsafe_allow_html=True)
+                st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:20px;'><i class='fa-solid fa-sliders' style='color:#667eea; margin-right:10px;'></i>01 / 體態配置</h4>", unsafe_allow_html=True)
                 
                 col_w, col_h, col_a = st.columns(3)
                 with col_w:
@@ -438,7 +438,7 @@ def main():
                 goal_key = goal[0]
                 st.markdown('</div>', unsafe_allow_html=True)
                 
-                calculate_clicked = st.button("EXECUTE ALGORITHM 🚀")
+                calculate_clicked = st.button("開始計算")
 
             with main_right:
                 if calculate_clicked:
@@ -470,7 +470,7 @@ def main():
                     st.markdown('</div>', unsafe_allow_html=True)
 
                     st.markdown('<div class="premium-card">', unsafe_allow_html=True)
-                    st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:15px;'><i class='fa-solid fa-utensils' style='color:#ff8f00; margin-right:10px;'></i>客製化動態配餐建議</h4>", unsafe_allow_html=True)
+                    st.markdown("<h4 style='color:#fff; font-weight:600; margin-top:0; margin-bottom:15px;'><i class='fa-solid fa-utensils' style='color:#ff8f00; margin-right:10px;'></i>配餐建議</h4>", unsafe_allow_html=True)
                     meal_data = generate_dynamic_meal_plan(target_calories, goal_key)
                     df_meals = pd.DataFrame(meal_data)
                     st.dataframe(df_meals, use_container_width=True, hide_index=True)
